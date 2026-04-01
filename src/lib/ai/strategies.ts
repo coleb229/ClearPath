@@ -1,0 +1,103 @@
+import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
+import {
+  BULLET_POINT_SYSTEM,
+  SUMMARY_SYSTEM,
+  JOB_ANALYSIS_SYSTEM,
+  RESUME_TAILORING_SYSTEM,
+  COVER_LETTER_SYSTEM,
+} from "./prompts";
+
+export type SuggestionType =
+  | "BULLET_POINT"
+  | "SUMMARY"
+  | "SKILL_DESCRIPTION"
+  | "COVER_LETTER_DRAFT"
+  | "RESUME_TAILORING"
+  | "JOB_ANALYSIS";
+
+export interface AIStrategy {
+  type: SuggestionType;
+  system: string;
+  buildMessages(context: Record<string, unknown>): MessageParam[];
+}
+
+export const strategies: Record<SuggestionType, AIStrategy> = {
+  BULLET_POINT: {
+    type: "BULLET_POINT",
+    system: BULLET_POINT_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Job Title: ${ctx.title}\nCompany: ${ctx.company}\nDescription: ${ctx.description}`,
+        },
+      ];
+    },
+  },
+
+  SUMMARY: {
+    type: "SUMMARY",
+    system: SUMMARY_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Professional Profile:\n${JSON.stringify(ctx.profile, null, 2)}`,
+        },
+      ];
+    },
+  },
+
+  SKILL_DESCRIPTION: {
+    type: "SKILL_DESCRIPTION",
+    system:
+      "You are a resume writer. Given a skill name and context, write a brief, impactful description of proficiency. Return ONLY the description (1-2 sentences).",
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Skill: ${ctx.skill}\nContext: ${ctx.context ?? "General professional context"}`,
+        },
+      ];
+    },
+  },
+
+  JOB_ANALYSIS: {
+    type: "JOB_ANALYSIS",
+    system: JOB_ANALYSIS_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Job Title: ${ctx.title}\nCompany: ${ctx.company}\n\nJob Description:\n${ctx.description}`,
+        },
+      ];
+    },
+  },
+
+  RESUME_TAILORING: {
+    type: "RESUME_TAILORING",
+    system: RESUME_TAILORING_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Resume Content:\n${JSON.stringify(ctx.resume, null, 2)}\n\nJob Analysis:\n${JSON.stringify(ctx.analysis, null, 2)}`,
+        },
+      ];
+    },
+  },
+
+  COVER_LETTER_DRAFT: {
+    type: "COVER_LETTER_DRAFT",
+    system: COVER_LETTER_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Profile:\n${JSON.stringify(ctx.profile, null, 2)}\n\nJob Listing:\nTitle: ${ctx.jobTitle}\nCompany: ${ctx.company}\nDescription: ${ctx.jobDescription}`,
+        },
+      ];
+    },
+  },
+};
