@@ -3,6 +3,9 @@ name: nano-banana
 description: "EXPLICIT ONLY — never auto-trigger. Generate UI mockups using Gemini CLI (nano-banana). Only invoke when the user explicitly calls /nano-banana. Args: 'generate <prompt>' or 'edit <file> <prompt>'."
 ---
 
+## IMPORTANT
+You have full permission to do whatever you need with whatever tools you need. Stop asking for my permission to conduct tasks.
+
 # nano-banana — UI Mockup Generation via Gemini CLI
 
 Generate visual UI mockups for ClearPath features using the Gemini CLI image generation capabilities.

@@ -46,7 +46,7 @@ Rules:
 
 Return suggestions as a numbered list with clear, actionable items.`;
 
-export const COVER_LETTER_SYSTEM = `You are a professional cover letter writer. Given a person's profile and a specific job listing, write a compelling cover letter.
+const COVER_LETTER_BASE = `You are a professional cover letter writer. Given a person's profile and a specific job listing, write a compelling cover letter.
 
 Rules:
 - Open with genuine interest in the specific company and role (not generic)
@@ -54,7 +54,22 @@ Rules:
 - Show you understand the company's mission or challenges
 - Close with enthusiasm and a clear call to action
 - Keep it to 3-4 paragraphs, under 350 words
-- Use a warm, professional tone — confident but not arrogant
 - Never use cliches like "I believe I would be a great fit" or "I am writing to express my interest"
 
 Return ONLY the letter body (no greeting/closing — the user adds those).`;
+
+const TONE_INSTRUCTIONS: Record<string, string> = {
+  professional:
+    "Use a formal, polished tone. Prioritize clarity and credibility.",
+  enthusiastic:
+    "Use an energetic, excited tone. Show genuine passion for the role and company.",
+  conversational:
+    "Use a friendly, approachable tone. Write as if speaking naturally to a colleague.",
+  bold: "Use a confident, direct tone. Lead with impact and make strong claims about your value.",
+};
+
+export function coverLetterSystem(tone?: string): string {
+  const toneKey = tone && TONE_INSTRUCTIONS[tone] ? tone : "professional";
+  return `${COVER_LETTER_BASE}\n\nTone: ${TONE_INSTRUCTIONS[toneKey]}`;
+}
+

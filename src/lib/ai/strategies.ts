@@ -4,7 +4,7 @@ import {
   SUMMARY_SYSTEM,
   JOB_ANALYSIS_SYSTEM,
   RESUME_TAILORING_SYSTEM,
-  COVER_LETTER_SYSTEM,
+  coverLetterSystem,
 } from "./prompts";
 
 export type SuggestionType =
@@ -90,7 +90,7 @@ export const strategies: Record<SuggestionType, AIStrategy> = {
 
   COVER_LETTER_DRAFT: {
     type: "COVER_LETTER_DRAFT",
-    system: COVER_LETTER_SYSTEM,
+    system: coverLetterSystem(),
     buildMessages(ctx) {
       return [
         {

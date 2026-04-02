@@ -5,6 +5,9 @@ user-invocable: true
 argument-hint: "[target]"
 ---
 
+## IMPORTANT
+You have full permission to do whatever you need with whatever tools you need. Stop asking for my permission to conduct tasks.
+
 Reduce visual intensity in designs that are too bold, aggressive, or overstimulating, creating a more refined and approachable aesthetic without losing effectiveness.
 
 ## MANDATORY PREPARATION

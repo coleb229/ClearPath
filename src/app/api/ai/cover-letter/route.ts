@@ -1,6 +1,7 @@
 import { auth } from "../../../../../auth";
 import { anthropic } from "@/lib/ai/client";
 import { strategies } from "@/lib/ai/strategies";
+import { coverLetterSystem } from "@/lib/ai/prompts";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -9,7 +10,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profile, jobTitle, company, jobDescription } = await request.json();
+  const { profile, jobTitle, company, jobDescription, tone } =
+    await request.json();
 
   if (!profile || !jobDescription) {
     return NextResponse.json(
@@ -22,12 +24,13 @@ export async function POST(request: Request) {
   const stream = anthropic.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
-    system: strategy.system,
+    system: coverLetterSystem(tone),
     messages: strategy.buildMessages({
       profile,
       jobTitle,
       company,
       jobDescription,
+      tone,
     }),
   });
 

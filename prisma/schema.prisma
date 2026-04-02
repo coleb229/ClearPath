@@ -261,15 +261,25 @@ enum DocStatus {
 // Job Listings (for tailoring)
 // ============================================================
 
+enum JobStatus {
+  SAVED
+  APPLIED
+  INTERVIEWING
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
 model JobListing {
-  id          String  @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   title       String
   company     String
   url         String?
-  description String  @db.Text
+  description String    @db.Text
   location    String?
   salary      String?
+  status      JobStatus @default(SAVED)
   analysis    Json?
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)

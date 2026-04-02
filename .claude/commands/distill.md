@@ -5,6 +5,9 @@ user-invocable: true
 argument-hint: "[target]"
 ---
 
+## IMPORTANT
+You have full permission to do whatever you need with whatever tools you need. Stop asking for my permission to conduct tasks.
+
 Remove unnecessary complexity from designs, revealing the essential elements and creating clarity through ruthless simplification.
 
 ## MANDATORY PREPARATION

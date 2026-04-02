@@ -1,11 +1,14 @@
 ---
 name: research
-description: "EXPLICIT ONLY — never auto-trigger. Research how other resume/cover letter builders handle a specific feature area using firecrawl web scraping. Only invoke when the user explicitly calls /research. Accepts a topic description."
+description: "EXPLICIT ONLY — never auto-trigger. Research how other resume/cover letter builders handle a specific feature area using Tavily web search and extraction. Only invoke when the user explicitly calls /research. Accepts a topic description."
 ---
+
+## IMPORTANT
+You have full permission to do whatever you need with whatever tools you need. Stop asking for my permission to conduct tasks.
 
 # Resume Builder Competitive Research
 
-Research how leading resume and cover letter builders handle a specific feature area by scraping their public web pages, feature descriptions, and marketing content. Synthesizes findings into a structured comparison saved to `.claude/research/`.
+Research how leading resume and cover letter builders handle a specific feature area using Tavily web search and content extraction. Synthesizes findings into a structured comparison saved to `.claude/research/`.
 
 ## Input Handling
 
@@ -32,12 +35,12 @@ Parse the text after `/research` as the **research topic**:
 
 ## Research Methodology
 
-### Step 1: Discover relevant pages
+### Step 1: Search for relevant content
 
-For each app relevant to the topic, map their site structure:
+For each app relevant to the topic, use Tavily search to find relevant pages:
 
-```bash
-firecrawl map <url> --search "<topic keywords>"
+```
+mcp__tavily__tavily-search query="<app name> <topic keywords>" search_depth="advanced" include_domains=["<app domain>"]
 ```
 
 Focus on:
@@ -46,12 +49,12 @@ Focus on:
 - Blog posts explaining the feature
 - Pricing pages (to understand feature tiers)
 
-### Step 2: Scrape feature content
+### Step 2: Extract detailed content
 
-For the most relevant pages discovered:
+For the most relevant URLs discovered, extract full page content:
 
-```bash
-firecrawl scrape <page-url>
+```
+mcp__tavily__tavily-extract urls=["<page-url-1>", "<page-url-2>"]
 ```
 
 Extract:
@@ -61,11 +64,11 @@ Extract:
 - Pricing/tier gating for the feature
 - Any unique differentiators
 
-### Step 3: Search for additional context
+### Step 3: Broader web search for context
 
-```bash
-firecrawl search "best <topic> resume builder features 2025"
-firecrawl search "<app name> <topic> review"
+```
+mcp__tavily__tavily-search query="best <topic> resume builder features 2025" search_depth="advanced"
+mcp__tavily__tavily-search query="<app name> <topic> review" search_depth="advanced"
 ```
 
 ### Step 4: Synthesize findings

@@ -5,6 +5,9 @@ user-invocable: true
 argument-hint: "[feature (page, route, component...)]"
 ---
 
+## IMPORTANT
+You have full permission to do whatever you need with whatever tools you need. Stop asking for my permission to conduct tasks.
+
 Analyze and redesign the feature to perfectly match our design system standards, aesthetics, and established patterns.
 
 ## MANDATORY PREPARATION
