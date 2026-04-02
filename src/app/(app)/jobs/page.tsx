@@ -18,7 +18,7 @@ export default async function JobsPage() {
     }),
   ]);
 
-  const jobs = jobListings.map((j) => ({
+  const jobs = jobListings.map((j: typeof jobListings[number]) => ({
     id: j.id,
     title: j.title,
     company: j.company,
@@ -31,7 +31,7 @@ export default async function JobsPage() {
     analysis: j.analysis as Record<string, unknown> | null,
   }));
 
-  const userSkills = (profile?.skills ?? []).map((s) => s.name);
+  const userSkills = (profile?.skills ?? []).map((s: { name: string }) => s.name);
 
   return (
     <div className="space-y-6">

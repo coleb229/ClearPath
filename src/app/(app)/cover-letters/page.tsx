@@ -20,7 +20,7 @@ export default async function CoverLettersPage() {
     }),
   ]);
 
-  const mappedCoverLetters = coverLetters.map((cl) => ({
+  const mappedCoverLetters = coverLetters.map((cl: typeof coverLetters[number]) => ({
     id: cl.id,
     title: cl.title,
     status: cl.status,

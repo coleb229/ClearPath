@@ -83,14 +83,14 @@ export default async function DashboardPage() {
 
   // Merge recent documents
   const recentDocs = [
-    ...recentResumes.map((r) => ({
+    ...recentResumes.map((r: typeof recentResumes[number]) => ({
       id: r.id,
       type: "resume" as const,
       title: r.title,
       status: r.status,
       updatedAt: r.updatedAt,
     })),
-    ...recentCoverLetters.map((cl) => ({
+    ...recentCoverLetters.map((cl: typeof recentCoverLetters[number]) => ({
       id: cl.id,
       type: "cover-letter" as const,
       title: cl.title,

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     ],
   },
   outputFileTracingIncludes: {
-    "/**/*": ["./src/generated/prisma/*.node"],
+    "/": ["./src/generated/prisma/*.node"],
   },
 };
 
