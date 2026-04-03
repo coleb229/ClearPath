@@ -4,6 +4,12 @@ import {
   SUMMARY_SYSTEM,
   JOB_ANALYSIS_SYSTEM,
   RESUME_TAILORING_SYSTEM,
+  SKILL_DESCRIPTION_SYSTEM,
+  SUMMARY_REWRITE_SYSTEM,
+  BULLET_IMPROVE_SYSTEM,
+  SKILLS_SUGGEST_SYSTEM,
+  RESUME_REVIEW_SYSTEM,
+  RESUME_ADJUSTMENT_SYSTEM,
   coverLetterSystem,
 } from "./prompts";
 
@@ -13,7 +19,12 @@ export type SuggestionType =
   | "SKILL_DESCRIPTION"
   | "COVER_LETTER_DRAFT"
   | "RESUME_TAILORING"
-  | "JOB_ANALYSIS";
+  | "JOB_ANALYSIS"
+  | "SUMMARY_REWRITE"
+  | "BULLET_IMPROVE"
+  | "SKILLS_SUGGEST"
+  | "RESUME_REVIEW"
+  | "RESUME_ADJUSTMENT";
 
 export interface AIStrategy {
   type: SuggestionType;
@@ -50,8 +61,7 @@ export const strategies: Record<SuggestionType, AIStrategy> = {
 
   SKILL_DESCRIPTION: {
     type: "SKILL_DESCRIPTION",
-    system:
-      "You are a resume writer. Given a skill name and context, write a brief, impactful description of proficiency. Return ONLY the description (1-2 sentences).",
+    system: SKILL_DESCRIPTION_SYSTEM,
     buildMessages(ctx) {
       return [
         {
@@ -96,6 +106,71 @@ export const strategies: Record<SuggestionType, AIStrategy> = {
         {
           role: "user",
           content: `Profile:\n${JSON.stringify(ctx.profile, null, 2)}\n\nJob Listing:\nTitle: ${ctx.jobTitle}\nCompany: ${ctx.company}\nDescription: ${ctx.jobDescription}`,
+        },
+      ];
+    },
+  },
+
+  SUMMARY_REWRITE: {
+    type: "SUMMARY_REWRITE",
+    system: SUMMARY_REWRITE_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Current Summary:\n${ctx.currentSummary ?? "(none)"}\n\nProfile:\n${JSON.stringify(ctx.profile, null, 2)}${ctx.jobAnalysis ? `\n\nJob Analysis:\n${JSON.stringify(ctx.jobAnalysis, null, 2)}` : ""}`,
+        },
+      ];
+    },
+  },
+
+  BULLET_IMPROVE: {
+    type: "BULLET_IMPROVE",
+    system: BULLET_IMPROVE_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Bullet point: ${ctx.bullet}\nJob Title: ${ctx.title}\nCompany: ${ctx.company}${ctx.keywords ? `\nTarget keywords: ${(ctx.keywords as string[]).join(", ")}` : ""}`,
+        },
+      ];
+    },
+  },
+
+  SKILLS_SUGGEST: {
+    type: "SKILLS_SUGGEST",
+    system: SKILLS_SUGGEST_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Work Experience:\n${JSON.stringify(ctx.experiences, null, 2)}\n\nCurrent Skills: ${(ctx.currentSkills as string[]).join(", ")}${ctx.jobAnalysis ? `\n\nJob Analysis:\n${JSON.stringify(ctx.jobAnalysis, null, 2)}` : ""}`,
+        },
+      ];
+    },
+  },
+
+  RESUME_REVIEW: {
+    type: "RESUME_REVIEW",
+    system: RESUME_REVIEW_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Resume:\n${JSON.stringify(ctx.resume, null, 2)}${ctx.jobAnalysis ? `\n\nJob Analysis:\n${JSON.stringify(ctx.jobAnalysis, null, 2)}` : ""}`,
+        },
+      ];
+    },
+  },
+
+  RESUME_ADJUSTMENT: {
+    type: "RESUME_ADJUSTMENT",
+    system: RESUME_ADJUSTMENT_SYSTEM,
+    buildMessages(ctx) {
+      return [
+        {
+          role: "user",
+          content: `Current Resume:\n${JSON.stringify(ctx.resume, null, 2)}\n\nAdjustment Request:\n${ctx.instruction}`,
         },
       ];
     },

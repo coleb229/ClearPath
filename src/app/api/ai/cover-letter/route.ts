@@ -2,6 +2,13 @@ import { auth } from "../../../../../auth";
 import { anthropic } from "@/lib/ai/client";
 import { strategies } from "@/lib/ai/strategies";
 import { coverLetterSystem } from "@/lib/ai/prompts";
+import { prisma } from "@/lib/prisma";
+import {
+  type AIGenerationSettings,
+  mergeSettings,
+  parsePreferences,
+  temperatureFromCreativity,
+} from "@/lib/ai/generation-settings";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -10,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { profile, jobTitle, company, jobDescription, tone } =
+  const { profile, jobTitle, company, jobDescription, tone, settings: requestSettings } =
     await request.json();
 
   if (!profile || !jobDescription) {
@@ -20,11 +27,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Load saved preferences and merge with request overrides
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { aiPreferences: true },
+  });
+  const saved = parsePreferences(user?.aiPreferences);
+  const merged = mergeSettings(saved, requestSettings as Partial<AIGenerationSettings> | undefined);
+
   const strategy = strategies.COVER_LETTER_DRAFT;
   const stream = anthropic.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
-    system: coverLetterSystem(tone),
+    temperature: temperatureFromCreativity(merged.creativity),
+    system: coverLetterSystem(tone, merged),
     messages: strategy.buildMessages({
       profile,
       jobTitle,

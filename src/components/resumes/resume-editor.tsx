@@ -11,18 +11,17 @@ import {
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Sparkles,
   Printer,
-  Check,
   Pencil,
+  Eye,
 } from "lucide-react";
 import { SortableList } from "@/components/ui/sortable-list";
 import { SectionToggle } from "@/components/resumes/section-toggle";
 import { ResumePreview } from "@/components/resumes/resume-preview";
 import { TemplatePicker } from "@/components/resumes/template-picker";
 import { MatchScore, calculateMatchScore } from "@/components/resumes/match-score";
-import { AISuggestionInline } from "@/components/profile/ai-suggestion-inline";
-import { useAISuggestion } from "@/hooks/use-ai-suggestion";
+import { ContentPicker } from "@/components/resumes/content-picker";
+import { ResumeAIPanel } from "@/components/resumes/ai/resume-ai-panel";
 import {
   updateResumeContent,
   updateResumeTemplate,
@@ -80,13 +79,6 @@ export function ResumeEditor({
   const [mobileTab, setMobileTab] = useState<EditorTab>("edit");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
-
-  const {
-    suggestion: tailorSuggestion,
-    isStreaming: isTailoring,
-    suggest: requestTailor,
-    clear: clearTailor,
-  } = useAISuggestion("RESUME_TAILORING");
 
   // Current template slug
   const currentTemplate = templates.find((t) => t.id === templateId);
@@ -192,31 +184,16 @@ export function ResumeEditor({
     }
   }, [editingTitle]);
 
-  // AI tailoring
-  const handleTailor = useCallback(() => {
-    requestTailor({
-      resume: resolvedData,
-      analysis: jobAnalysis,
-    });
-  }, [requestTailor, resolvedData, jobAnalysis]);
-
-  const handleAcceptTailor = useCallback(
-    (text: string) => {
-      // Store tailoring suggestions as summary override for now
+  // Content update callback for AI tools
+  const handleContentUpdate = useCallback(
+    (updater: (prev: ResumeContent) => ResumeContent) => {
       setContent((prev) => {
-        const next = {
-          ...prev,
-          overrides: {
-            ...prev.overrides,
-            summary: text,
-          },
-        };
+        const next = updater(prev);
         saveContent(next);
         return next;
       });
-      clearTailor();
     },
-    [saveContent, clearTailor]
+    [saveContent]
   );
 
   // Print
@@ -273,17 +250,14 @@ export function ResumeEditor({
         </div>
 
         <div className="flex items-center gap-2">
-          {resume.jobListingId && jobAnalysis && (
-            <button
-              type="button"
-              onClick={handleTailor}
-              disabled={isTailoring}
-              className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-1.5 text-sm font-medium text-accent transition-all duration-(--dur-state) ease-(--ease-out-quart) hover:bg-accent/10 disabled:opacity-50"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              {isTailoring ? "Tailoring..." : "Tailor to Job"}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => router.push(`/resumes/${resume.id}/preview`)}
+            className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/5 px-3 py-1.5 text-sm font-medium text-accent transition-colors duration-(--dur-state) ease-(--ease-out-quart) hover:bg-accent/10"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Preview
+          </button>
           <button
             type="button"
             onClick={handlePrint}
@@ -320,18 +294,6 @@ export function ResumeEditor({
           Preview
         </button>
       </div>
-
-      {/* AI tailoring suggestion */}
-      {(tailorSuggestion || isTailoring) && (
-        <div className="animate-fade-up">
-          <AISuggestionInline
-            suggestion={tailorSuggestion}
-            isStreaming={isTailoring}
-            onAccept={handleAcceptTailor}
-            onDismiss={clearTailor}
-          />
-        </div>
-      )}
 
       {/* Split layout */}
       <div className="flex gap-6 animate-fade-up animate-delay-1">
@@ -375,6 +337,24 @@ export function ResumeEditor({
             />
           </div>
 
+          {/* Content picker — toggle individual items per section */}
+          <ContentPicker
+            profile={profile}
+            content={content}
+            onUpdateContent={handleContentUpdate}
+          />
+
+          {/* AI Assist panel */}
+          <ResumeAIPanel
+            resumeId={resume.id}
+            content={content}
+            profile={profile}
+            resolvedData={resolvedData}
+            jobAnalysis={jobAnalysis}
+            userSkills={userSkills}
+            onUpdateContent={handleContentUpdate}
+          />
+
           {/* Save indicator */}
           {isPending && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -386,7 +366,7 @@ export function ResumeEditor({
 
         {/* Right panel — Preview */}
         <div
-          className={`flex-1 min-w-0 ${
+          className={`flex-1 min-w-0 min-h-[70vh] ${
             mobileTab !== "preview" ? "hidden lg:block" : ""
           }`}
         >

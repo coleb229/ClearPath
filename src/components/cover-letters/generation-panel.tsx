@@ -8,6 +8,8 @@ import {
 } from "@/components/cover-letters/tone-selector";
 import { AISuggestionInline } from "@/components/profile/ai-suggestion-inline";
 import { useAISuggestion } from "@/hooks/use-ai-suggestion";
+import { GenerationSettingsPopover } from "@/components/ai/generation-settings-popover";
+import type { AIGenerationSettings } from "@/lib/ai/generation-settings";
 
 interface GenerationPanelProps {
   profile: Record<string, unknown>;
@@ -28,6 +30,7 @@ export function GenerationPanel({
 }: GenerationPanelProps) {
   const [tone, setTone] = useState<CoverLetterTone>("professional");
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [settingsOverrides, setSettingsOverrides] = useState<Partial<AIGenerationSettings> | null>(null);
 
   const {
     suggestion,
@@ -40,14 +43,17 @@ export function GenerationPanel({
   const handleGenerate = useCallback(() => {
     if (!job) return;
     setHasGenerated(true);
-    suggest({
-      profile,
-      jobTitle: job.title,
-      company: job.company,
-      jobDescription: job.description,
-      tone,
-    });
-  }, [suggest, profile, job, tone]);
+    suggest(
+      {
+        profile,
+        jobTitle: job.title,
+        company: job.company,
+        jobDescription: job.description,
+        tone,
+      },
+      settingsOverrides ?? undefined
+    );
+  }, [suggest, profile, job, tone, settingsOverrides]);
 
   const handleAccept = useCallback(
     (text: string) => {
@@ -71,8 +77,14 @@ export function GenerationPanel({
         </p>
       </div>
 
-      {/* Tone selector */}
-      <ToneSelector value={tone} onChange={setTone} />
+      {/* Tone & settings */}
+      <div className="flex items-center gap-2">
+        <ToneSelector value={tone} onChange={setTone} />
+        <GenerationSettingsPopover
+          value={settingsOverrides}
+          onChange={setSettingsOverrides}
+        />
+      </div>
 
       {/* No job warning */}
       {!job && (

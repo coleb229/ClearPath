@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { AISuggestionInline } from "./ai-suggestion-inline";
 import { useAISuggestion } from "@/hooks/use-ai-suggestion";
+import { GenerationSettingsPopover } from "@/components/ai/generation-settings-popover";
+import type { AIGenerationSettings } from "@/lib/ai/generation-settings";
 import {
   createExperience,
   updateExperience,
@@ -190,11 +192,12 @@ function ExperienceEditForm({
   const [activeBulletIndex, setActiveBulletIndex] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const { suggestion, isStreaming, suggest, clear } = useAISuggestion("BULLET_POINT");
+  const [settingsOverrides, setSettingsOverrides] = useState<Partial<AIGenerationSettings> | null>(null);
 
   function handleImprove(index: number, bulletText: string, title: string, company: string) {
     setActiveBulletIndex(index);
     clear();
-    suggest({ title, company, description: bulletText });
+    suggest({ title, company, description: bulletText }, settingsOverrides ?? undefined);
   }
 
   function handleAcceptSuggestion(text: string) {
@@ -311,9 +314,15 @@ function ExperienceEditForm({
 
         {/* Row 5: Bullets */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            Key Achievements
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-muted-foreground">
+              Key Achievements
+            </label>
+            <GenerationSettingsPopover
+              value={settingsOverrides}
+              onChange={setSettingsOverrides}
+            />
+          </div>
           {bullets.map((bullet, index) => (
             <div key={index} className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">

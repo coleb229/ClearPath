@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { type ActionResult, getSessionUserId } from "@/lib/actions";
 import { PROFILE_WITH_RELATIONS } from "@/lib/profile-data";
+import {
+  type AIGenerationSettings,
+  DEFAULT_AI_SETTINGS,
+} from "@/lib/ai/generation-settings";
 
 export async function updateUserName(name: string): Promise<ActionResult> {
   const userId = await getSessionUserId();
@@ -144,6 +148,36 @@ export async function exportUserData(): Promise<
   };
 
   return { success: true, data: JSON.stringify(exportData, null, 2) };
+}
+
+export async function updateAIPreferences(
+  preferences: AIGenerationSettings
+): Promise<ActionResult> {
+  const userId = await getSessionUserId();
+  if (!userId) return { success: false, error: "Unauthorized" };
+
+  // Validate
+  const creativity = Math.max(0, Math.min(100, preferences.creativity));
+  const formality = ["casual", "balanced", "formal"].includes(
+    preferences.formality
+  )
+    ? preferences.formality
+    : DEFAULT_AI_SETTINGS.formality;
+  const detailLevel = ["concise", "balanced", "detailed"].includes(
+    preferences.detailLevel
+  )
+    ? preferences.detailLevel
+    : DEFAULT_AI_SETTINGS.detailLevel;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      aiPreferences: { creativity, formality, detailLevel },
+    },
+  });
+
+  revalidatePath("/settings");
+  return { success: true };
 }
 
 export async function deleteAccount(): Promise<ActionResult> {

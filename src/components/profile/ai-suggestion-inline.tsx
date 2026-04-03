@@ -1,12 +1,13 @@
 "use client"
 
-import { Check, X } from "lucide-react"
+import { Check, X, Eye } from "lucide-react"
 
 interface AISuggestionInlineProps {
   suggestion: string
   isStreaming: boolean
   onAccept: (text: string) => void
   onDismiss: () => void
+  onSendToPreview?: (text: string) => void
 }
 
 export function AISuggestionInline({
@@ -14,6 +15,7 @@ export function AISuggestionInline({
   isStreaming,
   onAccept,
   onDismiss,
+  onSendToPreview,
 }: AISuggestionInlineProps) {
   if (!suggestion && !isStreaming) return null
 
@@ -38,6 +40,16 @@ export function AISuggestionInline({
             <Check className="h-4 w-4" />
             Accept
           </button>
+          {onSendToPreview && (
+            <button
+              type="button"
+              onClick={() => onSendToPreview(suggestion)}
+              className="inline-flex items-center gap-1 text-sm font-medium text-accent/70 transition-colors duration-(--dur-state) hover:text-accent"
+            >
+              <Eye className="h-4 w-4" />
+              Preview
+            </button>
+          )}
           <button
             type="button"
             onClick={onDismiss}

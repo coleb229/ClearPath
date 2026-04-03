@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { anthropic } from "@/lib/ai/client";
 import { strategies, type SuggestionType } from "@/lib/ai/strategies";
+import { buildSystemPrompt, coverLetterSystem } from "@/lib/ai/prompts";
+import { prisma } from "@/lib/prisma";
+import {
+  type AIGenerationSettings,
+  mergeSettings,
+  parsePreferences,
+  temperatureFromCreativity,
+} from "@/lib/ai/generation-settings";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -10,9 +18,10 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { type, context } = body as {
+  const { type, context, settings: requestSettings } = body as {
     type: SuggestionType;
     context: Record<string, unknown>;
+    settings?: Partial<AIGenerationSettings>;
   };
 
   const strategy = strategies[type];
@@ -20,10 +29,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
 
+  // Load saved preferences from DB and merge with request overrides
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { aiPreferences: true },
+  });
+  const saved = parsePreferences(user?.aiPreferences);
+  const merged = mergeSettings(saved, requestSettings);
+
+  // Build the system prompt — cover letters get special handling for tone
+  let systemPrompt: string;
+  if (type === "COVER_LETTER_DRAFT") {
+    const tone = (context.tone as string) ?? "professional";
+    systemPrompt = coverLetterSystem(tone, merged);
+  } else {
+    systemPrompt = buildSystemPrompt(strategy.system, merged, type);
+  }
+
   const stream = anthropic.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
-    system: strategy.system,
+    temperature: temperatureFromCreativity(merged.creativity),
+    system: systemPrompt,
     messages: strategy.buildMessages(context),
   });
 

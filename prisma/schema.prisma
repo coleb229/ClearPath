@@ -29,6 +29,7 @@ model User {
   coverLetters  CoverLetter[]
   jobListings   JobListing[]
   aiSuggestions AISuggestion[]
+  aiPreferences Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

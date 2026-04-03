@@ -2,12 +2,16 @@
 
 import { useState, useCallback } from "react";
 import type { SuggestionType } from "@/lib/ai/strategies";
+import type { AIGenerationSettings } from "@/lib/ai/generation-settings";
 
 interface UseAISuggestionReturn {
   suggestion: string;
   isStreaming: boolean;
   error: string | null;
-  suggest: (context: Record<string, unknown>) => Promise<void>;
+  suggest: (
+    context: Record<string, unknown>,
+    settings?: Partial<AIGenerationSettings>
+  ) => Promise<void>;
   clear: () => void;
 }
 
@@ -19,7 +23,10 @@ export function useAISuggestion(
   const [error, setError] = useState<string | null>(null);
 
   const suggest = useCallback(
-    async (context: Record<string, unknown>) => {
+    async (
+      context: Record<string, unknown>,
+      settings?: Partial<AIGenerationSettings>
+    ) => {
       setSuggestion("");
       setError(null);
       setIsStreaming(true);
@@ -28,7 +35,7 @@ export function useAISuggestion(
         const res = await fetch("/api/ai/suggest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type, context }),
+          body: JSON.stringify({ type, context, settings }),
         });
 
         if (!res.ok) {

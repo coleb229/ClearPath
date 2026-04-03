@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AccountSection } from "@/components/settings/account-section";
 import { PreferencesSection } from "@/components/settings/preferences-section";
+import { AISettingsSection } from "@/components/settings/ai-settings-section";
 import { DataSection } from "@/components/settings/data-section";
 import { DangerZone } from "@/components/settings/danger-zone";
+import { parsePreferences, mergeSettings } from "@/lib/ai/generation-settings";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -17,6 +19,7 @@ export default async function SettingsPage() {
       email: true,
       image: true,
       createdAt: true,
+      aiPreferences: true,
     },
   });
 
@@ -43,6 +46,13 @@ export default async function SettingsPage() {
           }}
         />
         <PreferencesSection />
+        <AISettingsSection
+          initialPreferences={
+            parsePreferences(user.aiPreferences)
+              ? mergeSettings(parsePreferences(user.aiPreferences))
+              : null
+          }
+        />
         <DataSection />
         <DangerZone userEmail={user.email} />
       </div>
