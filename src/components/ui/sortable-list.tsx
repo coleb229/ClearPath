@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -99,6 +99,7 @@ export function SortableList<T>({
   renderItem,
   onReorder,
 }: SortableListProps<T>) {
+  const dndId = useId();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -132,6 +133,7 @@ export function SortableList<T>({
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}

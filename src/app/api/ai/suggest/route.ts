@@ -10,6 +10,7 @@ import {
   parsePreferences,
   temperatureFromCreativity,
 } from "@/lib/ai/generation-settings";
+import { fetchProfileWithRelations } from "@/lib/profile-data";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -37,6 +38,43 @@ export async function POST(request: Request) {
   const saved = parsePreferences(user?.aiPreferences);
   const merged = mergeSettings(saved, requestSettings);
 
+  // For SUMMARY requests, always fetch profile server-side for complete data
+  if (type === "SUMMARY") {
+    const profile = await fetchProfileWithRelations(session.user.id);
+    if (profile) {
+      context.profile = {
+        headline: profile.headline,
+        summary: profile.summary,
+        phone: profile.phone,
+        location: profile.location,
+        website: profile.website,
+        linkedin: profile.linkedin,
+        github: profile.github,
+        experiences: profile.experiences.map((e) => ({
+          title: e.title,
+          company: e.company,
+          description: e.description,
+          bullets: e.bullets,
+        })),
+        educations: profile.educations.map((e) => ({
+          institution: e.institution,
+          degree: e.degree,
+          field: e.field,
+        })),
+        skills: profile.skills.map((s) => ({
+          name: s.name,
+          category: s.category,
+          level: s.level,
+        })),
+        projects: profile.projects.map((p) => ({
+          name: p.name,
+          description: p.description,
+          bullets: p.bullets,
+        })),
+      };
+    }
+  }
+
   // Build the system prompt — cover letters get special handling for tone
   let systemPrompt: string;
   if (type === "COVER_LETTER_DRAFT") {
@@ -46,33 +84,45 @@ export async function POST(request: Request) {
     systemPrompt = buildSystemPrompt(strategy.system, merged, type);
   }
 
-  const stream = anthropic.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    temperature: temperatureFromCreativity(merged.creativity),
-    system: systemPrompt,
-    messages: strategy.buildMessages(context),
-  });
+  try {
+    const stream = anthropic.messages.stream({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      temperature: temperatureFromCreativity(merged.creativity),
+      system: systemPrompt,
+      messages: strategy.buildMessages(context),
+    });
 
-  const encoder = new TextEncoder();
-  const readable = new ReadableStream({
-    async start(controller) {
-      for await (const event of stream) {
-        if (
-          event.type === "content_block_delta" &&
-          event.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(event.delta.text));
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const event of stream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              controller.enqueue(encoder.encode(event.delta.text));
+            }
+          }
+          controller.close();
+        } catch (err) {
+          console.error("AI stream error:", err);
+          controller.error(err);
         }
-      }
-      controller.close();
-    },
-  });
+      },
+    });
 
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Transfer-Encoding": "chunked",
-    },
-  });
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
+    });
+  } catch (err) {
+    console.error("AI suggest error:", err);
+    const message =
+      err instanceof Error ? err.message : "AI service unavailable";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

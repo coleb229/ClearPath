@@ -47,7 +47,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const ai = useAISuggestion("SUMMARY")
 
   function handleGenerateSummary() {
-    ai.suggest({ headline: headline || undefined })
+    ai.suggest({})
   }
 
   function handleAcceptSummary(text: string) {
